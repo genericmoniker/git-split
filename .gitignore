@@ -12,6 +12,7 @@ venv
 
 # Distribution / packaging
 *.egg-info/
+dist
 
 # Unit test / coverage reports
 .pytest_cache/
@@ -20,3 +21,6 @@ venv
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Editors
+.vscode

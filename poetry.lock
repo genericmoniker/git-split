@@ -353,7 +353,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 version = "1.13.0"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Python Library for Tom's Obvious, Minimal Language"
 name = "toml"
 optional = false
@@ -421,7 +421,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "f5594dc3b91bf7ab32a83befbc8e7ef45842dc753ddc057b275417d55ffdde56"
+content-hash = "e4bc8f67fb7ae65843e1c4b450b061c5792a6a843015efcad6738c6119a7336e"
 python-versions = "^3.6"
 
 [metadata.files]

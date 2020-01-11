@@ -4,9 +4,13 @@ version = "0.0.1"
 description = "A history-preserving file splitter for Git."
 authors = ["Eric Smith <eric@esmithy.net>"]
 license = "MIT"
+packages = [
+  { include = "gitsplit" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
+toml = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 black = {version = "*", allow-prereleases = true}
