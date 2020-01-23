@@ -19,6 +19,7 @@ mypy = "*"
 pre-commit = "*"
 pylint = "*"
 pytest = "*"
+pyfakefs = "^3.7.1"
 
 [tool.poetry.scripts]
 "git-split" = "gitsplit.main:main"

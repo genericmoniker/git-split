@@ -33,9 +33,8 @@ repos:
 
   - id: pytest
     name: pytest
-    stages: [commit]
+    stages: [push]
     language: system
     entry: poetry run pytest
     types: [python]
     pass_filenames: false
-
