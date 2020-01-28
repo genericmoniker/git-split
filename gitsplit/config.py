@@ -2,6 +2,7 @@ import collections
 from pathlib import Path
 
 import toml
+from ranges import Range, RangeSet
 
 
 class Config:
@@ -16,18 +17,19 @@ class Config:
         self._source_file = SourceFile(base_path / source)
 
         self._split_files = [
-            base_path / k
+            SplitFile(base_path / k, data[k])
             for k in data.keys()
             if isinstance(data[k], collections.abc.Mapping)
         ]
         if not self._split_files:
             raise ConfigError("No split files specified in the config file.")
         for f in self._split_files:
-            if f.exists():
+            if f.exists():  # No
                 raise ConfigError(f'Split file "{f}" already exists.')
 
     @classmethod
     def from_file(cls, config_file: Path) -> "Config":
+        """Create a configuration from a file."""
         return cls(config_file.read_text(), config_file.parent)
 
     @property
@@ -63,12 +65,31 @@ class SourceFile:
 class SplitFile:
     """A target file for splitting into."""
 
-    def __init__(self, path: Path, lines: str):
+    def __init__(self, path: Path, split_data: collections.abc.Mapping):
         self._path = path
-        self._lines = lines
+        self._lines = self._create_line_ranges(split_data)
+
+    def __contains__(self, item):
+        return item in self._lines
+
+    def _create_line_ranges(self, split_data: collections.abc.Mapping):
+        lines = split_data.get("lines")
+        if not lines or not lines.strip():
+            raise ConfigError(f'No lines specified for split file "{self._path}".')
+
+        range_set = RangeSet()
+        line_ranges = lines.split(",")
+        for line_range in line_ranges:
+            start, _, end = line_range.partition("-")
+            try:
+                start = int(start)
+                end = int(end) if end else start
+                if start < 1 or end < 1:
+                    raise ValueError
+                range_set.add(Range(start, end, include_end=True))
+            except ValueError:
+                raise ConfigError(f'Invalid lines for split file "{self._path}".')
+        return range_set
 
     def exists(self):
         return self._path.exists()
-
-    def todo(self):
-        pass

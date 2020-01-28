@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from gitsplit.config import Config, ConfigError, SourceFile
+from gitsplit.config import Config, ConfigError, SourceFile, SplitFile
 
 
 def test_config_error_if_source_file_not_specified():
@@ -28,13 +28,39 @@ def test_config_error_if_no_split_files(fs):
     assert "split files" in str(excinfo.value)
 
 
-@pytest.mark.xfail(reason="Not yet implemented.")
-def test_config_error_if_split_file_has_no_lines(fs):
-    config_data = 'source="src"\n[file]\n'
+@pytest.mark.parametrize(
+    "config_data",
+    [
+        'source="src"\n[file]\n',
+        'source="src"\n[file]\nlines=""',
+        'source="src"\n[file]\nlines=" \t"',
+        'source="src"\n[file]\nlines="0-10"',
+        'source="src"\n[file]\nlines="2-1"',
+        'source="src"\n[file]\nlines="-2-1"',
+        'source="src"\n[file]\nlines="1-10-20"',
+        'source="src"\n[file]\nlines="1-q"',
+        'source="src"\n[file]\nlines="blah"',
+    ],
+)
+def test_config_error_if_split_file_has_invalid_lines(config_data, fs):
     fs.create_file("src")
     with pytest.raises(ConfigError) as excinfo:
         Config(config_data, base_path=Path("/"))
     assert "lines" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    "data, lines_in",
+    [
+        ({"lines": "1"}, [1]),
+        ({"lines": "1,2"}, [1, 2]),
+        ({"lines": "5-10"}, [5, 6, 7, 8, 9, 10]),
+        ({"lines": "100-102, 25, 33-34"}, [25, 33, 34, 100, 101, 102]),
+    ],
+)
+def test_split_file_lines(data, lines_in):
+    split_file = SplitFile(Path(), data)
+    assert all(line in split_file for line in lines_in)
 
 
 def test_source_file_line_count(fs):
