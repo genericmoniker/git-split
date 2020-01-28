@@ -17,7 +17,7 @@ class Config:
         self._source_file = SourceFile(base_path / source)
 
         self._split_files = [
-            SplitFile(base_path / k, data[k])
+            SplitFile(base_path / k, data[k], self._source_file.line_count)
             for k in data.keys()
             if isinstance(data[k], collections.abc.Mapping)
         ]
@@ -65,14 +65,14 @@ class SourceFile:
 class SplitFile:
     """A target file for splitting into."""
 
-    def __init__(self, path: Path, split_data: collections.abc.Mapping):
+    def __init__(self, path: Path, split_data: collections.abc.Mapping, max_line: int):
         self._path = path
-        self._lines = self._create_line_ranges(split_data)
+        self._lines = self._create_line_ranges(split_data, max_line)
 
     def __contains__(self, item):
         return item in self._lines
 
-    def _create_line_ranges(self, split_data: collections.abc.Mapping):
+    def _create_line_ranges(self, split_data: collections.abc.Mapping, max_line: int):
         lines = split_data.get("lines")
         if not lines or not lines.strip():
             raise ConfigError(f'No lines specified for split file "{self._path}".')
@@ -84,11 +84,11 @@ class SplitFile:
             try:
                 start = int(start)
                 end = int(end) if end else start
-                if start < 1 or end < 1:
-                    raise ValueError
+                if not 0 < start <= max_line or not 0 < end <= max_line:
+                    raise ValueError("Out of range.")
                 range_set.add(Range(start, end, include_end=True))
-            except ValueError:
-                raise ConfigError(f'Invalid lines for split file "{self._path}".')
+            except ValueError as ex:
+                raise ConfigError(f'Invalid lines for split file "{self._path}". {ex}')
         return range_set
 
     def exists(self):

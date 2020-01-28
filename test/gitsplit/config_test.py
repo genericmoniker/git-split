@@ -29,23 +29,24 @@ def test_config_error_if_no_split_files(fs):
 
 
 @pytest.mark.parametrize(
-    "config_data",
+    "data",
     [
-        'source="src"\n[file]\n',
-        'source="src"\n[file]\nlines=""',
-        'source="src"\n[file]\nlines=" \t"',
-        'source="src"\n[file]\nlines="0-10"',
-        'source="src"\n[file]\nlines="2-1"',
-        'source="src"\n[file]\nlines="-2-1"',
-        'source="src"\n[file]\nlines="1-10-20"',
-        'source="src"\n[file]\nlines="1-q"',
-        'source="src"\n[file]\nlines="blah"',
+        {},
+        {"lines": ""},
+        {"lines": " \t"},
+        {"lines": "0-10"},
+        {"lines": "2-1"},
+        {"lines": "-2-1"},
+        {"lines": "1-10-20"},
+        {"lines": "1-q"},
+        {"lines": "blah"},
+        {"lines": "200-201"},
+        {"lines": "201"},
     ],
 )
-def test_config_error_if_split_file_has_invalid_lines(config_data, fs):
-    fs.create_file("src")
+def test_config_error_if_split_file_has_invalid_lines(data):
     with pytest.raises(ConfigError) as excinfo:
-        Config(config_data, base_path=Path("/"))
+        SplitFile(Path(), data, max_line=200)
     assert "lines" in str(excinfo.value)
 
 
@@ -59,7 +60,7 @@ def test_config_error_if_split_file_has_invalid_lines(config_data, fs):
     ],
 )
 def test_split_file_lines(data, lines_in):
-    split_file = SplitFile(Path(), data)
+    split_file = SplitFile(Path(), data, max_line=200)
     assert all(line in split_file for line in lines_in)
 
 
