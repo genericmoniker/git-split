@@ -46,8 +46,8 @@ def test_split(repo):
     dairy = repo / "dairy"
     fruits = repo / "fruits"
     veggies = repo / "veggies"
-    assert dairy.exists()
-    assert fruits.exists()
-    assert veggies.exists()
+    assert dairy.readtext() == "cheese\neggs\nmilk\n"
+    assert fruits.readtext() == "apple\ngrape\norange\n"
+    assert veggies.readtext() == "celery\nlettuce\npeas\n"
 
     # TODO: Further assertions... pylint: disable=fixme

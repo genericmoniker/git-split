@@ -64,6 +64,22 @@ def test_split_file_lines(data, lines_in):
     assert all(line in split_file for line in lines_in)
 
 
+@pytest.mark.parametrize(
+    "config_data, lines_in",
+    [
+        ('source="src"\n[f1]\nlines="1,3,5"\n[star]\nlines="*"', [2, 4, 6]),
+        ('source="src"\n[f1]\nlines="1,3,5"\n[star]\nlines="1, *"', [1, 2, 4, 6]),
+        ('source="src"\n[f1]\nlines="1-3"\n[star]\nlines="*"\n[f2]\nlines="6"', [4, 5]),
+        ('source="src"\n[star]\nlines="*"', [1, 2, 3, 4, 5, 6]),
+    ],
+)
+def test_split_file_wildcard_line(config_data, lines_in, fs):
+    fs.create_file("src", contents="A\nB\nC\nD\nE\nF\n")
+    config = Config(config_data, base_path=Path("/"))
+    star_split_file = next(split for split in config.split_files if split.has_star)
+    assert all(line in star_split_file for line in lines_in)
+
+
 def test_source_file_line_count(fs):
     fs.create_file("src", contents="one \n two \n three \n")
     source_file = SourceFile(Path("src"))
