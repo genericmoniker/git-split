@@ -36,6 +36,7 @@ def edit(path: Path, text: str, author: str):
 
 
 def test_split(repo):
+    """Test Raymond Chen's split example."""
     config_src = Path(__file__).parent / "foods.split.toml"
     config_file = repo / config_src.name
     shutil.copy(config_src, config_file)
@@ -46,8 +47,8 @@ def test_split(repo):
     dairy = repo / "dairy"
     fruits = repo / "fruits"
     veggies = repo / "veggies"
-    assert dairy.readtext() == "cheese\neggs\nmilk\n"
-    assert fruits.readtext() == "apple\ngrape\norange\n"
-    assert veggies.readtext() == "celery\nlettuce\npeas\n"
+    assert dairy.read_text() == "cheese\neggs\nmilk\n"
+    assert fruits.read_text() == "apple\ngrape\norange\n"
+    assert veggies.read_text() == "celery\nlettuce\npeas\n"
 
     # TODO: Further assertions... pylint: disable=fixme
