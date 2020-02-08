@@ -8,9 +8,13 @@ from ranges import Range, RangeSet
 class Config:  # pylint: disable=too-few-public-methods
     """File split configuration."""
 
-    def __init__(self, config_data: str, base_path: Path):
+    def __init__(self, data: collections.abc.Mapping, base_path: Path):
+        """Create a configuration.
+
+        :param data: configuration data.
+        :param base_path: base path for any relative paths in `data`.
+        """
         self._base_path = base_path
-        data = toml.loads(config_data)
         source = data.get("source")
         if not source:
             raise ConfigError("Source file not specified in the config file.")
@@ -34,7 +38,12 @@ class Config:  # pylint: disable=too-few-public-methods
     @classmethod
     def from_file(cls, config_file: Path) -> "Config":
         """Create a configuration from a file."""
-        return cls(config_file.read_text(), config_file.parent)
+        # Use TOML for now; other formats could be handled if desired.
+        return cls.from_toml(config_file.read_text(), config_file.parent)
+
+    @classmethod
+    def from_toml(cls, toml_data: str, base_path: Path) -> "Config":
+        return cls(toml.loads(toml_data), base_path)
 
 
 class ConfigError(Exception):

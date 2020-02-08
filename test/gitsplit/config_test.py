@@ -8,7 +8,7 @@ from gitsplit.config import Config, ConfigError, SourceFile, SplitFile
 def test_config_error_if_source_file_not_specified():
     config_data = '[file]\nlines="1"'
     with pytest.raises(ConfigError) as excinfo:
-        Config(config_data, base_path=Path("/"))
+        Config.from_toml(config_data, base_path=Path("/"))
     assert "Source" in str(excinfo.value)
 
 
@@ -16,7 +16,7 @@ def test_config_error_if_source_file_not_specified():
 def test_config_error_if_source_file_does_not_exist():
     config_data = 'source="src"\n[file]\nlines="1"'
     with pytest.raises(ConfigError) as excinfo:
-        Config(config_data, base_path=Path("/"))
+        Config.from_toml(config_data, base_path=Path("/"))
     assert "exist" in str(excinfo.value)
 
 
@@ -24,7 +24,7 @@ def test_config_error_if_no_split_files(fs):
     config_data = 'source="src"'
     fs.create_file("src")
     with pytest.raises(ConfigError) as excinfo:
-        Config(config_data, base_path=Path("/"))
+        Config.from_toml(config_data, base_path=Path("/"))
     assert "split files" in str(excinfo.value)
 
 
@@ -75,7 +75,7 @@ def test_split_file_lines(data, lines_in):
 )
 def test_split_file_wildcard_line(config_data, lines_in, fs):
     fs.create_file("src", contents="A\nB\nC\nD\nE\nF\n")
-    config = Config(config_data, base_path=Path("/"))
+    config = Config.from_toml(config_data, base_path=Path("/"))
     star_split_file = next(split for split in config.split_files if split.has_star)
     assert all(line in star_split_file for line in lines_in)
 
