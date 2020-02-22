@@ -1,5 +1,13 @@
 # git-split
 
+## Usage
+
+Start with an unmodified working tree. git-split will abort otherwise. "Please,
+commit your changes or stash them before running git-split." 
+
+The split will be a merge into your current branch. You may want to create and
+checkout a branch for that specifically.
+
 ## Development setup
 ```sh
 # If poetry isn't installed

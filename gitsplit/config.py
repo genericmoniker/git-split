@@ -1,4 +1,5 @@
 import collections
+from os import fspath
 from pathlib import Path
 
 import toml
@@ -14,7 +15,7 @@ class Config:  # pylint: disable=too-few-public-methods
         :param data: configuration data.
         :param base_path: base path for any relative paths in `data`.
         """
-        self._base_path = base_path
+        self.base_path = base_path
         source = data.get("source")
         if not source:
             raise ConfigError("Source file not specified in the config file.")
@@ -58,6 +59,16 @@ class SourceFile:
             raise ConfigError(f'Source file "{path}" does not exist.')
         self._path = path
         self._line_count = None
+        # We save the file contents early because splitting later involves using
+        # git mv on the source file, and it won't be there anymore to read.
+        self._lines = path.read_text().splitlines(keepends=True)
+
+    def __fspath__(self):
+        return fspath(self._path)
+
+    def __getattr__(self, attr):
+        # Delegate any other attributes to `Path`.
+        return getattr(self._path, attr)
 
     @property
     def line_count(self):
@@ -67,8 +78,7 @@ class SourceFile:
 
     @property
     def lines(self):
-        with self._path.open("r") as f:
-            yield from f
+        return self._lines
 
 
 class SplitFile:
@@ -83,6 +93,9 @@ class SplitFile:
     def __repr__(self):
         return f"{self.__class__.__name__}(path={self._path})"
 
+    def __fspath__(self):
+        return fspath(self._path)
+
     def __contains__(self, item):
         return item in self._lines
 
@@ -92,6 +105,10 @@ class SplitFile:
 
     def __exit__(self, _exc_type, _exc_value, _traceback):
         self.close()
+
+    def __getattr__(self, attr):
+        # Delegate any other attributes to `Path`.
+        return getattr(self._path, attr)
 
     def _create_line_ranges(self, split_data: collections.abc.Mapping, max_line: int):
         lines = split_data.get("lines")

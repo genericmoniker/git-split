@@ -1,3 +1,4 @@
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -35,7 +36,7 @@ def edit(path: Path, text: str, author: str):
     run(["git", "commit", "-am", "msg", f'--author="{author}"'], check=True, cwd=cwd)
 
 
-def test_split(repo):
+def test_split_source_into_multiple_destinations(repo):
     """Test Raymond Chen's split example."""
     config_src = Path(__file__).parent / "foods.split.toml"
     config_file = repo / config_src.name
@@ -51,4 +52,14 @@ def test_split(repo):
     assert fruits.read_text() == "apple\ngrape\norange\n"
     assert veggies.read_text() == "celery\nlettuce\npeas\n"
 
-    # TODO: Further assertions... pylint: disable=fixme
+    cwd = str(repo)
+    blame = run(["git", "blame", "dairy"], check=True, cwd=cwd).stdout
+    assert re.match(".*Alice.+cheese.*Bob.+eggs.*Carol.+milk", blame)
+    blame = run(["git", "blame", "fruits"], check=True, cwd=cwd).stdout
+    assert re.match(".*Alice.+apple.*Bob.+grape.*Carol.+orange", blame)
+    blame = run(["git", "blame", "veggies"], check=True, cwd=cwd).stdout
+    assert re.match(".*Alice.+celery.*Bob.+lettuce.*Carol.+peas", blame)
+
+
+def test_split_section_from_source():
+    pass
