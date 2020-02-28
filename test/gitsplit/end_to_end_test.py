@@ -2,7 +2,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from subprocess import run
+from subprocess import PIPE, run
 from unittest import mock
 
 import pytest
@@ -52,13 +52,13 @@ def test_split_source_into_multiple_destinations(repo):
     assert fruits.read_text() == "apple\ngrape\norange\n"
     assert veggies.read_text() == "celery\nlettuce\npeas\n"
 
-    cwd = str(repo)
-    blame = run(["git", "blame", "dairy"], check=True, cwd=cwd).stdout
-    assert re.match(".*Alice.+cheese.*Bob.+eggs.*Carol.+milk", blame)
-    blame = run(["git", "blame", "fruits"], check=True, cwd=cwd).stdout
-    assert re.match(".*Alice.+apple.*Bob.+grape.*Carol.+orange", blame)
-    blame = run(["git", "blame", "veggies"], check=True, cwd=cwd).stdout
-    assert re.match(".*Alice.+celery.*Bob.+lettuce.*Carol.+peas", blame)
+    kwargs = {"cwd": str(repo), "stdout": PIPE}
+    blame = run(["git", "blame", "dairy"], check=True, **kwargs).stdout.decode()
+    assert re.match(".*Alice.+cheese.*Bob.+eggs.*Carol.+milk", blame, re.DOTALL)
+    blame = run(["git", "blame", "fruits"], check=True, **kwargs).stdout.decode()
+    assert re.match(".*Alice.+apple.*Bob.+grape.*Carol.+orange", blame, re.DOTALL)
+    blame = run(["git", "blame", "veggies"], check=True, **kwargs).stdout.decode()
+    assert re.match(".*Alice.+celery.*Bob.+lettuce.*Carol.+peas", blame, re.DOTALL)
 
 
 def test_split_section_from_source():
