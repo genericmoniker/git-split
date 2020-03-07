@@ -1,28 +1,25 @@
-from os import fspath
-from subprocess import run
-
 from gitsplit.config import Config, SourceFile, SplitFile
+from gitsplit.git import Git
 
 
 def do_splits(config: Config):
-    cwd = str(config.source_file.parent)
+    git = Git(cwd=str(config.source_file.parent))
     for split_file in config.split_files:
         commit_msg = f"Split {config.source_file.name} to {split_file.name}"
-        create_move_branch(config, split_file)
-        commit(cwd, commit_msg)
+        create_branch(git, config, split_file)
+        git.move(config.source_file, split_file)
+        git.commit(commit_msg)
         with split_file:
             edit_file(config, split_file)
-        commit(cwd, commit_msg)
-        pop_branch(cwd)
-    merge_branches(config, cwd)
+        git.commit(commit_msg)
+        git.pop_branch()
+    merge_branches(git, config)
 
 
-def create_move_branch(config: Config, split_file: SplitFile):
+def create_branch(git: Git, config: Config, split_file: SplitFile):
     source_file = config.source_file
-    cwd = str(source_file.parent)
     branch_name = make_branch_name(source_file, split_file)
-    run(["git", "checkout", "-b", branch_name], check=True, cwd=cwd)
-    run(["git", "mv", fspath(source_file), fspath(split_file)], check=True, cwd=cwd)
+    git.checkout_new_branch(branch_name)
 
 
 def make_branch_name(source_file: SourceFile, split_file: SplitFile) -> str:
@@ -42,19 +39,8 @@ def edit_file(config: Config, split_file: SplitFile):
             split_file.write(line)
 
 
-def commit(cwd, message):
-    """Stage and commit tracked, modified files."""
-    run(["git", "commit", "-am", message], check=True, cwd=cwd)
-
-
-def pop_branch(cwd):
-    """Go back to the previously checked out branch."""
-    run(["git", "checkout", "-"], check=True, cwd=cwd)
-
-
-def merge_branches(config: Config, cwd):
-    run(["git", "branch", "-a"], check=True, cwd=cwd)
-    cmd = ["git", "merge"]
+def merge_branches(git: Git, config: Config):
+    branches = []
     for split_file in config.split_files:
-        cmd.append(make_branch_name(config.source_file, split_file))
-    run(cmd, check=True, cwd=cwd)
+        branches.append(make_branch_name(config.source_file, split_file))
+    git.merge_branches(branches)
