@@ -3,8 +3,9 @@ from subprocess import PIPE, run
 
 
 class Git:
-    def __init__(self, cwd):
+    def __init__(self, cwd, commit_no_verify: bool):
         self.cwd = cwd
+        self.commit_no_verify = commit_no_verify
 
     def _git(self, *args):
         cmd = ["git"]
@@ -20,14 +21,17 @@ class Git:
 
     def commit(self, message):
         """Stage and commit tracked, modified files."""
-        return self._git("commit", "-am", message)
+        args = ["commit", "-am", message]
+        if self.commit_no_verify:
+            args.append("--no-verify")
+        return self._git(*args)
 
     def commit_tree(self, tree_hash, parents, message):
         p_args = []
         for parent in parents:
             p_args.append("-p")
             p_args.append(parent)
-        result = self._git("commit-tree", tree_hash, *p_args, "-m", message)
+        result = self._git("commit-tree", *p_args, "-m", message, tree_hash)
         return result.stdout.decode().strip()
 
     def merge_branches(self, branches):

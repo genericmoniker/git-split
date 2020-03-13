@@ -35,6 +35,7 @@ class Config:
                     (split for split in self.split_files if split != split_file),
                 )
                 break
+        self.commit_no_verify = data.get("commit_no_verify", False)
 
     @classmethod
     def from_file(cls, config_file: Path) -> "Config":

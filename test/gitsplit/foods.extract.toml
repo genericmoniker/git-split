@@ -1,4 +1,5 @@
 source = "foods"
+commit_no_verify = true
 
 [foods]
 lines = "*"

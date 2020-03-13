@@ -5,7 +5,7 @@ from gitsplit.git import Git
 
 
 def do_splits(config: Config):
-    git = Git(cwd=str(config.source_file.parent))
+    git = Git(str(config.source_file.parent), config.commit_no_verify)
     if any(fspath(split) == fspath(config.source_file) for split in config.split_files):
         run_extract(config, git)
     else:
