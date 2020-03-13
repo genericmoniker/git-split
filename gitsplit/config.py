@@ -6,7 +6,7 @@ import toml
 from ranges import Range, RangeSet
 
 
-class Config:  # pylint: disable=too-few-public-methods
+class Config:
     """File split configuration."""
 
     def __init__(self, data: collections.abc.Mapping, base_path: Path):
@@ -63,6 +63,9 @@ class SourceFile:
         # git mv on the source file, and it won't be there anymore to read.
         self._lines = path.read_text().splitlines(keepends=True)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(path={self._path})"
+
     def __fspath__(self):
         return fspath(self._path)
 
@@ -79,6 +82,16 @@ class SourceFile:
     @property
     def lines(self):
         return self._lines
+
+    def difference(self, split_file: "SplitFile") -> "SplitFile":
+        """Create a SplitFile of the difference with another SplitFile.
+
+        That is, create a SplitFile that has all of the lines of this SourceFile except
+        for lines in `split_file`.
+        """
+        diff_split = SplitFile(self._path, {"lines": "*"}, self.line_count)
+        diff_split.expand_star(self.line_count, [split_file])
+        return diff_split
 
 
 class SplitFile:

@@ -1,0 +1,10 @@
+source = "foods"
+
+[foods]
+lines = "*"
+
+[fruits]
+lines = "1, 5, 8"
+
+[veggies]
+lines = "2, 6, 9"

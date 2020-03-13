@@ -36,11 +36,40 @@ def edit(path: Path, text: str, author: str):
     run(["git", "commit", "-am", "msg", f'--author="{author}"'], check=True, cwd=cwd)
 
 
-def test_split_source_into_multiple_destinations(repo):
-    """Test Raymond Chen's split example."""
-    config_src = Path(__file__).parent / "foods.split.toml"
-    config_file = repo / config_src.name
+def get_config(repo_path: Path, filename: str) -> Path:
+    """Get a config file, copied from the test directory into repo_path.
+
+    :param repo_path: path to the repo into which to copy the config file.
+    :param filename: name of the file from the test directory.
+    :return: the path to the copied config file.
+    """
+    config_src = Path(__file__).parent / filename
+    config_file = repo_path / config_src.name
     shutil.copy(config_src, config_file)
+    return config_file
+
+
+def get_blame(repo_path: Path, filename: str) -> str:
+    """Get the `git blame` output for a file."""
+    return run(
+        ["git", "blame", filename], check=True, cwd=str(repo_path), stdout=PIPE
+    ).stdout.decode()
+
+
+def is_author(author: str, text: str, blame: str) -> bool:
+    """Determine if an author authored the given text."""
+    for line in blame.splitlines():
+        if re.match(f".*{author}.+{text}", line):
+            return True
+    return False
+
+
+def test_split_source_into_multiple_destinations(repo):
+    """Split a file into multiple files.
+
+    https://devblogs.microsoft.com/oldnewthing/20190916-00/?p=102892
+    """
+    config_file = get_config(repo, "foods.split.toml")
 
     with mock.patch.object(sys, "argv", ["git-split", str(config_file)]):
         main()
@@ -52,14 +81,46 @@ def test_split_source_into_multiple_destinations(repo):
     assert fruits.read_text() == "apple\ngrape\norange\n"
     assert veggies.read_text() == "celery\nlettuce\npeas\n"
 
-    kwargs = {"cwd": str(repo), "stdout": PIPE}
-    blame = run(["git", "blame", "dairy"], check=True, **kwargs).stdout.decode()
-    assert re.match(".*Alice.+cheese.*Bob.+eggs.*Carol.+milk", blame, re.DOTALL)
-    blame = run(["git", "blame", "fruits"], check=True, **kwargs).stdout.decode()
-    assert re.match(".*Alice.+apple.*Bob.+grape.*Carol.+orange", blame, re.DOTALL)
-    blame = run(["git", "blame", "veggies"], check=True, **kwargs).stdout.decode()
-    assert re.match(".*Alice.+celery.*Bob.+lettuce.*Carol.+peas", blame, re.DOTALL)
+    blame = get_blame(repo, "dairy")
+    assert is_author("Alice", "cheese", blame)
+    assert is_author("Bob", "eggs", blame)
+    assert is_author("Carol", "milk", blame)
+    blame = get_blame(repo, "fruits")
+    assert is_author("Alice", "apple", blame)
+    assert is_author("Bob", "grape", blame)
+    assert is_author("Carol", "orange", blame)
+    blame = get_blame(repo, "veggies")
+    assert is_author("Alice", "celery", blame)
+    assert is_author("Bob", "lettuce", blame)
+    assert is_author("Carol", "peas", blame)
 
 
-def test_split_section_from_source():
-    pass
+def test_extract_section_from_source(repo):
+    """Test extracting sections of the source into new files.
+
+    https://devblogs.microsoft.com/oldnewthing/20190917-00/?p=102894
+    """
+    config_file = get_config(repo, "foods.extract.toml")
+
+    with mock.patch.object(sys, "argv", ["git-split", str(config_file)]):
+        main()
+
+    foods = repo / "foods"
+    fruits = repo / "fruits"
+    veggies = repo / "veggies"
+    assert foods.read_text() == "cheese\neggs\nmilk\n"
+    assert fruits.read_text() == "apple\ngrape\norange\n"
+    assert veggies.read_text() == "celery\nlettuce\npeas\n"
+
+    blame = get_blame(repo, "foods")
+    assert is_author("Alice", "cheese", blame)
+    assert is_author("Bob", "eggs", blame)
+    assert is_author("Carol", "milk", blame)
+    blame = get_blame(repo, "fruits")
+    assert is_author("Alice", "apple", blame)
+    assert is_author("Bob", "grape", blame)
+    assert is_author("Carol", "orange", blame)
+    blame = get_blame(repo, "veggies")
+    assert is_author("Alice", "celery", blame)
+    assert is_author("Bob", "lettuce", blame)
+    assert is_author("Carol", "peas", blame)

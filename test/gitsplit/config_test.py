@@ -90,3 +90,14 @@ def test_source_file_lines(fs):
     fs.create_file("src", contents="one \n two \n three \n")
     source_file = SourceFile(Path("src"))
     assert list(source_file.lines) == ["one \n", " two \n", " three \n"]
+
+
+def test_source_file_difference(fs):
+    fs.create_file("src", contents="A\nB\nC\nD\nE\nF\n")
+    source_file = SourceFile(Path("src"))
+    split_file = SplitFile(Path("dst"), {"lines": "1, 3-4"}, source_file.line_count)
+    diff = source_file.difference(split_file)
+    expected_lines = [2, 5, 6]
+    unexpected_lines = [1, 3, 4]
+    assert all(line in diff for line in expected_lines)
+    assert not any(line in diff for line in unexpected_lines)
