@@ -26,10 +26,13 @@ Using this utility, you create a
 [TOML-formatted](https://github.com/toml-lang/toml) config file specifying the
 source file to start with, the resulting files to split to, and which lines
 from the source file you want to include in each split out file. After running
-the utility, you'll end up with the files as specified, merged into the
+the utility, you'll end up with the files as specified, committed into the
 currently checked out Git branch.
 
 ## A Simple Example
+
+
+## Extracting Part of a File
 
 
 ## Installation
