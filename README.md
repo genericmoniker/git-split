@@ -1,7 +1,6 @@
 # git-split
 
-**Warning: This project is under active development and probably isn't ready to
-use yet!** Please check back as it matures.
+**Warning: This project is experimental and may even be a really bad idea!**
 
 A history-preserving file splitter for Git.
 
